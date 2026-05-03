@@ -62,10 +62,3 @@ export default {
         { headers: { "Content-Type": "application/json" } }
       );
     }
-
-    // Pass all /mcp requests directly to McpAgent
-    return (
-      MotionMCPAgent.mount("/mcp") as { fetch: (req: Request, env: Env, ctx: ExecutionContext) => Promise<Response> }
-    ).fetch(request, env, ctx);
-  },
-};
