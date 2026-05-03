@@ -10,7 +10,6 @@ import { SERVER_INSTRUCTIONS } from "./utils/serverInstructions";
 
 interface Env {
   MOTION_API_KEY: string;
-  MOTION_MCP_SECRET: string;
   MOTION_MCP_TOOLS?: string;
   MCP_OBJECT: DurableObjectNamespace;
 }
@@ -64,21 +63,9 @@ export default {
       );
     }
 
-    // Validate secret path: /mcp/{secret}/...
-    // Clients configure URL as: https://your-worker.workers.dev/mcp/YOUR_SECRET
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    if (pathParts[0] !== "mcp" || pathParts[1] !== env.MOTION_MCP_SECRET) {
-      return new Response("Not found", { status: 404 });
-    }
-
-    // Rewrite path to strip the secret before passing to McpAgent
-    // e.g., /mcp/SECRET -> /mcp, /mcp/SECRET/sse -> /mcp/sse
-    const cleanPath = "/mcp" + (pathParts.length > 2 ? "/" + pathParts.slice(2).join("/") : "");
-    const cleanUrl = new URL(cleanPath, url.origin);
-    const cleanRequest = new Request(cleanUrl, request);
-
+    // Pass all /mcp requests directly to McpAgent
     return (
       MotionMCPAgent.mount("/mcp") as { fetch: (req: Request, env: Env, ctx: ExecutionContext) => Promise<Response> }
-    ).fetch(cleanRequest, env, ctx);
+    ).fetch(request, env, ctx);
   },
 };
